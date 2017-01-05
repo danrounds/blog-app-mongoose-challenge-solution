@@ -83,7 +83,7 @@ describe('Blog posts API resource', function() {
         });
 
         it('should return records with the right fields', function() {
-            let resSingleBlogPost;
+            let resBlogPost;
             return chai.request(app)
                 .get('/posts')
                 .then(function(res) {
@@ -97,27 +97,36 @@ describe('Blog posts API resource', function() {
                         blogPost.should.include.keys(
                             'title', 'author', 'content');
                     });
-                    resSingleBlogPost = res.body[0];
-                    return BlogRecords.findById(resSingleBlogPost.id);
+                    resBlogPost = res.body[0];
+                    return BlogRecords.findById(resBlogPost.id);
                 })
-                .then(function(blogPost) {
-                    resSingleBlogPost.id.should.equal(blogPost.id);
-                    resSingleBlogPost.title.should.equal(blogPost.title);
-                    resSingleBlogPost.author.should.equal(blogPost.authorName);
-                    resSingleBlogPost.content.should.equal(blogPost.content);
+                .then(function(blogRecord) {
+                    resBlogPost.id.should.equal(blogRecord.id);
+                    resBlogPost.title.should.equal(blogRecord.title);
+                    resBlogPost.author.should.equal(blogRecord.authorName);
+                    resBlogPost.content.should.equal(blogRecord.content);
                 });
 
         });
 
-        // it('should return specific blog posts if given an _id as a path ', function() {
-        //     let resSingleBlogPost;
-        //     return chai.request(app)
-        //         .get('/posts')
-        //         .then(function(res) {
-        //             resSingleBlogPost = res.body[0];
-        //         })
-        //         .get(`/posts/${resSingleBlogPost.id}`);
-        // });
+        it('should return specific blog posts if given an _id as a path ', function() {
+            let record;
+            return BlogRecords
+                .findOne()
+                .exec()
+                .then(function(_record) {
+                    record = _record;
+                    return chai.request(app)
+                        .get(`/posts/${record.id}`);
+                })
+                .then(function(res) {
+                    const blogPost = res.body;
+                    blogPost.id.should.equal(record.id);
+                    blogPost.title.should.equal(record.title);
+                    blogPost.author.should.equal(record.authorName);
+                    blogPost.content.should.equal(record.content);
+                });
+        });
     });
 
     describe('POST endpoint', function() {
