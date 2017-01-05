@@ -115,7 +115,6 @@ describe('Blog posts API resource', function() {
         //         .get('/posts')
         //         .then(function(res) {
         //             resSingleBlogPost = res.body[0];
-        //             return;
         //         })
         //         .get(`/posts/${resSingleBlogPost.id}`);
         // });
@@ -151,11 +150,33 @@ describe('Blog posts API resource', function() {
         });
     });
 
-    // describe('PUT endpoint', function() {
-    //     it('should update the fields of our blog post data that we specify', function() {
-    //         ;
-    //     });
-    // });
+    describe('PUT endpoint', function() {
+        it('should update the fields of our blog post data that we specify', function() {
+            const updateData = {
+                content: faker.lorem.paragraphs(13),
+                title: faker.random.words()
+            };
+
+            return BlogRecords
+                .findOne()
+                .exec()
+                .then(function(blogRecord) {
+                    updateData.id = blogRecord.id;
+
+                    return chai.request(app)
+                        .put(`/posts/${blogRecord.id}`)
+                        .send(updateData);
+                })
+                .then(function(res) {
+                    res.should.have.status(204);
+                    return BlogRecords.findById(updateData.id).exec();
+                })
+                .then(function(blogPost) {
+                    blogPost.content.should.equal(updateData.content);
+                    blogPost.title.should.equal(updateData.title);
+                });
+        });
+    });
 
     // describe('DELETE endpoint', function() {
     //     it('should delete a post by id', function() {
