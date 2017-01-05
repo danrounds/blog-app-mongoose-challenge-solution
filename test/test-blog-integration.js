@@ -82,42 +82,74 @@ describe('Blog posts API resource', function() {
                 });
         });
 
-    it('should return records with the right fields', function() {
-        let resSingleBlogPost;
-        return chai.request(app)
-            .get('/posts')
-            .then(function(res) {
-                res.should.have.status(200);
-                res.should.be.json;
-                res.body.should.be.a('array');
-                res.body.should.have.length.of.at.least(1);
+        it('should return records with the right fields', function() {
+            let resSingleBlogPost;
+            return chai.request(app)
+                .get('/posts')
+                .then(function(res) {
+                    res.should.have.status(200);
+                    res.should.be.json;
+                    res.body.should.be.a('array');
+                    res.body.should.have.length.of.at.least(1);
 
-                res.body.forEach(function(blogPost) {
-                    blogPost.should.be.a('object');
-                    blogPost.should.include.keys(
-                        'title', 'author', 'content');
+                    res.body.forEach(function(blogPost) {
+                        blogPost.should.be.a('object');
+                        blogPost.should.include.keys(
+                            'title', 'author', 'content');
+                    });
+                    resSingleBlogPost = res.body[0];
+                    return BlogRecords.findById(resSingleBlogPost.id);
+                })
+                .then(function(blogPost) {
+                    resSingleBlogPost.id.should.equal(blogPost.id);
+                    resSingleBlogPost.title.should.equal(blogPost.title);
+                    resSingleBlogPost.author.should.equal(blogPost.authorName);
+                    resSingleBlogPost.content.should.equal(blogPost.content);
                 });
-                resSingleBlogPost = res.body[0];
-                return BlogRecords.findById(resSingleBlogPost.id);
-            })
-            .then(function(blogPost) {
-                resSingleBlogPost.id.should.equal(blogPost.id);
-                resSingleBlogPost.title.should.equal(blogPost.title);
-                resSingleBlogPost.author.should.equal(blogPost.authorName);
-                resSingleBlogPost.content.should.equal(blogPost.content);
-            });
+
+        });
+
+        // it('should return specific blog posts if given an _id as a path ', function() {
+        //     let resSingleBlogPost;
+        //     return chai.request(app)
+        //         .get('/posts')
+        //         .then(function(res) {
+        //             resSingleBlogPost = res.body[0];
+        //             return;
+        //         })
+        //         .get(`/posts/${resSingleBlogPost.id}`);
+        // });
     });
-        
-        it('should return specific blog posts if given an _id as a path ', function() {
-            ;
+
+    describe('POST endpoint', function() {
+        it('should add a new blog post', function() {
+            const newPost = generateBlogPostData(); // newly generated blog post data
+
+            return chai.request(app)
+                .post('/posts')
+                .send(newPost)
+                .then(function(res) {
+                    // compare our response to the example object we created
+                    res.should.have.status(201);
+                    res.should.be.json;
+                    res.body.should.include.keys(
+                        'title', 'author', 'content');
+                    res.body.title.should.equal(newPost.title);
+                    res.body.author.should.equal(`${newPost.author.firstName} `
+                                                +`${newPost.author.lastName}`);
+                    res.body.content.should.equal(newPost.content);
+                    return BlogRecords.findById(res.body.id);
+                })
+                .then(function(blogRecord) {
+                    //compare our actual database instance (blogRecord) to the example object we created
+                    blogRecord.title.should.equal(newPost.title);
+                    blogRecord.author.firstName.should.equal(newPost.author.firstName);
+                    blogRecord.author.lastName.should.equal(newPost.author.lastName);
+                    blogRecord.content.should.equal(newPost.content);
+                });
+
         });
     });
-
-    // describe('POST endpoint', function() {
-    //     it('should add a new blog post', function() {
-    //         ;
-    //     });
-    // });
 
     // describe('PUT endpoint', function() {
     //     it('should update the fields of our blog post data that we specify', function() {
@@ -130,5 +162,4 @@ describe('Blog posts API resource', function() {
     //         ;
     //     });
 
-    });
 });
