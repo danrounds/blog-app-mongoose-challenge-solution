@@ -10,6 +10,9 @@ mongoose.Promise = global.Promise;
 const should = chai.should();
 
 const {BlogPost} = require('../models');
+const BlogRecords = BlogPost;
+// /\ didn't want to alter model.js, but this is semantically clearer, to me
+
 const {app, runServer, closeServer} = require('../server');
 const {TEST_DATABASE_URL} = require('../config');
 
@@ -23,7 +26,7 @@ function seedBlogData() {
     for (let i=0; i < 10; i++) {
         seedData.push(generateBlogPostData());
     }
-    return BlogPost.insertMany(seedData);
+    return BlogRecords.insertMany(seedData);
 }
 // generates a single plausible-seeming entry of blog-post data
 function generateBlogPostData() {
@@ -72,21 +75,43 @@ describe('Blog posts API resource', function() {
                 .then(function(_res) {
                     res = _res;
                     res.should.have.status(200);
-                    return BlogPost.count();
+                    return BlogRecords.count();
                 })
                 .then(function(count) {
                     res.body.should.have.length.of(count);
                 });
         });
 
-//     it('should return records with the right fields', function() {
-    //         ;
-    //     });
+    it('should return records with the right fields', function() {
+        let resSingleBlogPost;
+        return chai.request(app)
+            .get('/posts')
+            .then(function(res) {
+                res.should.have.status(200);
+                res.should.be.json;
+                res.body.should.be.a('array');
+                res.body.should.have.length.of.at.least(1);
 
-    //     it('should return specific blog posts if given an _id as a path ', function() {
-    //         ;
-    //     });
-    // });
+                res.body.forEach(function(blogPost) {
+                    blogPost.should.be.a('object');
+                    blogPost.should.include.keys(
+                        'title', 'author', 'content');
+                });
+                resSingleBlogPost = res.body[0];
+                return BlogRecords.findById(resSingleBlogPost.id);
+            })
+            .then(function(blogPost) {
+                resSingleBlogPost.id.should.equal(blogPost.id);
+                resSingleBlogPost.title.should.equal(blogPost.title);
+                resSingleBlogPost.author.should.equal(blogPost.authorName);
+                resSingleBlogPost.content.should.equal(blogPost.content);
+            });
+    });
+        
+        it('should return specific blog posts if given an _id as a path ', function() {
+            ;
+        });
+    });
 
     // describe('POST endpoint', function() {
     //     it('should add a new blog post', function() {
