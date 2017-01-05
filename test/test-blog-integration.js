@@ -15,8 +15,10 @@ const {TEST_DATABASE_URL} = require('../config');
 
 chai.use(chaiHttp);
 
+
 // populates our database with blog-post-y fake data. Faker does all the work
 function seedBlogData() {
+    console.info('seeding blog post data');
     const seedData = [];
     for (let i=0; i < 10; i++) {
         seedData.push(generateBlogPostData());
@@ -26,7 +28,10 @@ function seedBlogData() {
 // generates a single plausible-seeming entry of blog-post data
 function generateBlogPostData() {
     return {
-        author: faker.findName(),
+        author: {
+            firstName: faker.name.firstName(),
+            lastName: faker.name.lastName()
+        },
         content: faker.lorem.paragraphs(13),
         title: faker.random.words(),
         create: faker.date.past()
@@ -39,7 +44,7 @@ function tearDownDb() {
     return mongoose.connection.dropDatabase();
 }
 
-describe('Blog posts API resource'), function() {
+describe('Blog posts API resource', function() {
 
     // each of our hook functions returns a callback
     before(function() {
@@ -61,33 +66,44 @@ describe('Blog posts API resource'), function() {
     // our actual tests. We next `describes', because it makes semantic sense
     describe('GET endpoint', function() {
         it('should return all our blog posts', function() {
-            ;
-        });
-        it('should return records with the right fields', function() {
-            ;
+            let res;
+            return chai.request(app)
+                .get('/posts')
+                .then(function(_res) {
+                    res = _res;
+                    res.should.have.status(200);
+                    return BlogPost.count();
+                })
+                .then(function(count) {
+                    res.body.should.have.length.of(count);
+                });
         });
 
-        it('should return specific blog posts if given an _id as a path ', function() {
-            ;
-        });
+//     it('should return records with the right fields', function() {
+    //         ;
+    //     });
+
+    //     it('should return specific blog posts if given an _id as a path ', function() {
+    //         ;
+    //     });
+    // });
+
+    // describe('POST endpoint', function() {
+    //     it('should add a new blog post', function() {
+    //         ;
+    //     });
+    // });
+
+    // describe('PUT endpoint', function() {
+    //     it('should update the fields of our blog post data that we specify', function() {
+    //         ;
+    //     });
+    // });
+
+    // describe('DELETE endpoint', function() {
+    //     it('should delete a post by id', function() {
+    //         ;
+    //     });
+
     });
-
-    describe('POST endpoint', function() {
-        it('should add a new blog post', function() {
-            ;
-        });
-    });
-
-    describe('PUT endpoint', function() {
-        it('should update the fields of our blog post data that we specify', function() {
-            ;
-        });
-    });
-
-    describe('DELETE endpoint', function() {
-        it('should delete a post by id', function() {
-            ;
-        });
-    });
-
-}
+});
