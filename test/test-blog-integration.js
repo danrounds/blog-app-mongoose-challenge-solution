@@ -178,9 +178,24 @@ describe('Blog posts API resource', function() {
         });
     });
 
-    // describe('DELETE endpoint', function() {
-    //     it('should delete a post by id', function() {
-    //         ;
-    //     });
-
+    describe('DELETE endpoint', function() {
+        it('should delete a post by id', function() {
+            let blogPost;
+            return BlogRecords
+                .findOne()
+                .exec()
+                .then(function(_blogPost) {
+                    blogPost = _blogPost;
+                    return chai.request(app).delete(`/posts/${_blogPost.id}`);
+                })
+                .then(function(res) {
+                    res.should.have.status(204);
+                    return BlogRecords.findById(blogPost.id).exec();
+                })
+                .then(function(allegedlyDeleted) {
+                    // hoping for BlogRecords.findById(blogPost.id) null value
+                    should.not.exist(allegedlyDeleted);
+                });
+        });
+    });
 });
