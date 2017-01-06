@@ -68,6 +68,10 @@ describe('Blog posts API resource', function() {
 
     // our actual tests. We next `describes', because it makes semantic sense
     describe('GET endpoint', function() {
+        // strategy:
+        //  1. GET blog posts
+        //  2. check returned status and data type
+        //  3. make sure returned blog posts's n equals the number of records
         it('should return all our blog posts', function() {
             let res;
             return chai.request(app)
@@ -83,6 +87,11 @@ describe('Blog posts API resource', function() {
         });
 
         it('should return records with the right fields', function() {
+            // strategy:
+            //  1. make GET request
+            //  2. check that required keys are present in the response
+            //  3. make sure the fields of our response match the fields in the
+            //     corresponding database record
             let resBlogPost;
             return chai.request(app)
                 .get('/posts')
@@ -109,7 +118,12 @@ describe('Blog posts API resource', function() {
 
         });
 
-        it('should return specific blog posts if given an _id as a path ', function() {
+        it('should return a specific blog posts if accessed as /posts/:id endpoing ', function() {
+            // strategy:
+            //  1. `findOne' blog post from our database and extract its id
+            //  2. make a GET request to /posts/:id
+            //  3. check that response has the right status and that all its
+            //     fields match the database entry's fields
             let record;
             return BlogRecords
                 .findOne()
@@ -120,6 +134,8 @@ describe('Blog posts API resource', function() {
                         .get(`/posts/${record.id}`);
                 })
                 .then(function(res) {
+                    res.should.have.status(200);
+
                     const blogPost = res.body;
                     blogPost.id.should.equal(record.id);
                     blogPost.title.should.equal(record.title);
@@ -130,6 +146,11 @@ describe('Blog posts API resource', function() {
     });
 
     describe('POST endpoint', function() {
+        // strategy:
+        //  1. generate random JSON data for a new blog post
+        //  2. make POST request and check status
+        //  3. compare POST response to the randomly-generated blog post
+        //  4. examine the relevant database record to see if it also matches
         it('should add a new blog post', function() {
             const newPost = generateBlogPostData(); // newly generated blog post data
 
@@ -160,6 +181,12 @@ describe('Blog posts API resource', function() {
     });
 
     describe('PUT endpoint', function() {
+        // strategy:
+        //  1. generate random data for fields we'll replace in our PUT request
+        //  2. find a blog post in our database and extract id
+        //  3. make PUT request using that id and our new fields
+        //  4. examine response code and compare new database object with the
+        //     object we sent in our PUT request. They should be equal.
         it('should update the fields of our blog post data that we specify', function() {
             const updateData = {
                 content: faker.lorem.paragraphs(13),
@@ -188,6 +215,11 @@ describe('Blog posts API resource', function() {
     });
 
     describe('DELETE endpoint', function() {
+        // strategy:
+        //  1. get a database record & extract the id
+        //  2. make a DELETE request with that id
+        //  3. check status code & see whether a record with that id exists
+        //     in the database
         it('should delete a post by id', function() {
             let blogPost;
             return BlogRecords
